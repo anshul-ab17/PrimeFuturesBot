@@ -1,8 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from bot.client import get_client
 from bot.orders import place_order
 from fastapi.middleware.cors import CORSMiddleware
+from binance.exceptions import BinanceAPIException
 
 app = FastAPI()
 
@@ -25,14 +26,19 @@ class OrderRequest(BaseModel):
 def trade(order: OrderRequest):
     client = get_client()
 
-    response = place_order(
-        client,
-        order.symbol,
-        order.side,
-        order.order_type,
-        order.quantity,
-        order.price
-    )
+    try:
+        response = place_order(
+            client,
+            order.symbol,
+            order.side,
+            order.order_type,
+            order.quantity,
+            order.price
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except BinanceAPIException as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
     return {
         "orderId": response.get("orderId"),

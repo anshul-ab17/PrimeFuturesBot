@@ -9,15 +9,24 @@ export default function OrderForm({ setResult }: any) {
     quantity: "0.01",
     price: "",
   });
+  const [error, setError] = useState<string | null>(null);
 
   const submit = async () => {
-    const res = await placeOrder({
-      ...form,
-      quantity: Number(form.quantity),
-      price: form.price ? Number(form.price) : null,
-    });
-
-    setResult(res);
+    setError(null);
+    try {
+      const res = await placeOrder({
+        ...form,
+        quantity: Number(form.quantity),
+        price: form.price ? Number(form.price) : null,
+      });
+      setResult(res);
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.detail ||
+        err?.message ||
+        "Failed to place order. Is the backend running?";
+      setError(message);
+    }
   };
 
   return (
@@ -68,6 +77,10 @@ export default function OrderForm({ setResult }: any) {
       >
         Submit
       </button>
+
+      {error && (
+        <p className="text-red-500 text-sm">{error}</p>
+      )}
     </div>
   );
 }
