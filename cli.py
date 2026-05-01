@@ -1,7 +1,7 @@
 import typer
 from bot.client import get_client
 from bot.orders import place_order
-from bot.validators import *
+from bot.validators import validate_side, validate_order_type, validate_price
 from bot.logging_config import setup_logger
 
 app = typer.Typer()
@@ -23,19 +23,24 @@ def trade(
 
         client = get_client()
 
-        print("\n Order Request:")
-        print(f"{side} {quantity} {symbol} ({order_type})")
+        typer.echo("\n Order Request:")
+        typer.echo(f"{side} {quantity} {symbol} ({order_type})")
+
+        confirm = typer.confirm("Proceed with order?")
+        if not confirm:
+            typer.echo("Cancelled ")
+            raise typer.Exit()
 
         response = place_order(client, symbol, side, order_type, quantity, price)
 
-        print("\n Order Response:")
-        print(f"Order ID: {response.get('orderId')}")
-        print(f"Status: {response.get('status')}")
-        print(f"Executed Qty: {response.get('executedQty')}")
-        print(f"Avg Price: {response.get('avgPrice')}")
+        typer.secho("\n Order Response:", fg=typer.colors.GREEN)
+        typer.echo(f"Order ID: {response.get('orderId')}")
+        typer.echo(f"Status: {response.get('status')}")
+        typer.echo(f"Executed Qty: {response.get('executedQty')}")
+        typer.echo(f"Avg Price: {response.get('avgPrice')}")
 
     except Exception as e:
-        print(f"\n Error: {str(e)}")
+        typer.secho(f"\n Error: {str(e)}", fg=typer.colors.RED)
 
 if __name__ == "__main__":
     app()
